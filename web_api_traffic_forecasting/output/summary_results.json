@@ -1,0 +1,185 @@
+{
+    "author": "Lê Quốc Cường",
+    "student_id": "4651050031",
+    "institution": "Trường Đại học Quy Nhơn",
+    "faculty": "Khoa Công nghệ Thông tin",
+    "course": "Dự báo chuỗi thời gian",
+    "project_title": "Web Application API Request Volume Forecasting and Anomaly Detection Using Box-Jenkins SARIMA Methodology",
+    "dataset": {
+        "total_observations": 2160,
+        "train_observations": 1728,
+        "test_observations": 432,
+        "granularity": "Hourly (1-hour)",
+        "seasonality_period": 24,
+        "mean_requests": 5537.030092592592,
+        "std_requests": 1772.0609427281513
+    },
+    "stationarity": {
+        "raw_adf_stat": -4.303771860399009,
+        "raw_adf_pvalue": 0.00043757873105972886,
+        "diff_adf_stat": -11.982847916293506,
+        "diff_adf_pvalue": 3.670447233816524e-22
+    },
+    "selected_sarima_model": {
+        "order": [
+            0,
+            1,
+            2
+        ],
+        "seasonal_order": [
+            0,
+            1,
+            1,
+            24
+        ],
+        "model_str": "SARIMA(0,1,2)(0,1,1)[24]",
+        "aic": 25004.03,
+        "bic": 25025.73
+    },
+    "forecasting_metrics": {
+        "RMSE": 2281.793512865922,
+        "MAE": 1457.745890145242,
+        "MAPE (%)": 24.42132657505773,
+        "R2": 0.06187616728199563
+    },
+    "anomaly_detection_metrics": {
+        "True_Positives (TP)": 7,
+        "False_Positives (FP)": 0,
+        "True_Negatives (TN)": 421,
+        "False_Negatives (FN)": 4,
+        "Precision": 1.0,
+        "Recall": 0.6363636363636364,
+        "F1_Score": 0.7777777777777778,
+        "Accuracy": 0.9907407407407407
+    },
+    "top_candidate_models": [
+        {
+            "order": [
+                0,
+                1,
+                2
+            ],
+            "seasonal_order": [
+                0,
+                1,
+                1,
+                24
+            ],
+            "model_str": "SARIMA(0,1,2)(0,1,1)[24]",
+            "AIC": 25004.03,
+            "BIC": 25025.73,
+            "HQIC": 25012.07,
+            "Log-Likelihood": -12498.02
+        },
+        {
+            "order": [
+                0,
+                1,
+                1
+            ],
+            "seasonal_order": [
+                0,
+                1,
+                1,
+                24
+            ],
+            "model_str": "SARIMA(0,1,1)(0,1,1)[24]",
+            "AIC": 25017.04,
+            "BIC": 25033.31,
+            "HQIC": 25023.06,
+            "Log-Likelihood": -12505.52
+        },
+        {
+            "order": [
+                1,
+                1,
+                1
+            ],
+            "seasonal_order": [
+                0,
+                1,
+                1,
+                24
+            ],
+            "model_str": "SARIMA(1,1,1)(0,1,1)[24]",
+            "AIC": 25018.79,
+            "BIC": 25040.49,
+            "HQIC": 25026.83,
+            "Log-Likelihood": -12505.4
+        },
+        {
+            "order": [
+                0,
+                1,
+                1
+            ],
+            "seasonal_order": [
+                1,
+                1,
+                1,
+                24
+            ],
+            "model_str": "SARIMA(0,1,1)(1,1,1)[24]",
+            "AIC": 25019.04,
+            "BIC": 25040.73,
+            "HQIC": 25027.07,
+            "Log-Likelihood": -12505.52
+        },
+        {
+            "order": [
+                1,
+                1,
+                1
+            ],
+            "seasonal_order": [
+                1,
+                1,
+                1,
+                24
+            ],
+            "model_str": "SARIMA(1,1,1)(1,1,1)[24]",
+            "AIC": 25020.79,
+            "BIC": 25047.92,
+            "HQIC": 25030.84,
+            "Log-Likelihood": -12505.4
+        }
+    ],
+    "benchmark_comparison": [
+        {
+            "Model": "Holt-Winters Exp Smoothing",
+            "RMSE": 2206.85,
+            "MAE": 1369.54,
+            "MAPE (%)": 23.36
+        },
+        {
+            "Model": "Proposed SARIMA (Box-Jenkins)",
+            "RMSE": 2281.79,
+            "MAE": 1457.75,
+            "MAPE (%)": 24.42
+        },
+        {
+            "Model": "Seasonal Naive (Lag 24)",
+            "RMSE": 2479.09,
+            "MAE": 1643.97,
+            "MAPE (%)": 26.85
+        },
+        {
+            "Model": "ARIMA (1,1,1) [No Seasonality]",
+            "RMSE": 2501.83,
+            "MAE": 1581.02,
+            "MAPE (%)": 29.76
+        },
+        {
+            "Model": "Moving Average (SMA-24)",
+            "RMSE": 2818.41,
+            "MAE": 1889.04,
+            "MAPE (%)": 31.56
+        },
+        {
+            "Model": "Naive (Lag 1)",
+            "RMSE": 2984.6,
+            "MAE": 2064.53,
+            "MAPE (%)": 33.31
+        }
+    ]
+}

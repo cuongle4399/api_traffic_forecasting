@@ -1,0 +1,25 @@
+# Word reports & documents
+*.docx
+*.doc
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+env/
+venv/
+.env
+
+# Streamlit local state
+.streamlit/
+
+# Temporary / OS files
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Agent system generated files
+.system_generated/

@@ -1,0 +1,5 @@
+Test,Series,ADF Statistic,p-value,Used Lags,Observations,Critical Value (1%),Critical Value (5%),Critical Value (10%),Is Stationary (p < 0.05),KPSS Statistic,Lags,Is Stationary (p >= 0.05)
+Augmented Dickey-Fuller (ADF),Raw Series Y_t,-4.303771860399009,0.00043757873105972886,25.0,1702.0,-3.4341979376824896,-2.8632396483453024,-2.5676748474801885,True,,,
+KPSS Test,Raw Series Y_t,,0.01,,,0.739,0.463,0.347,,2.3188543210613357,23.0,False
+Augmented Dickey-Fuller (ADF),Differenced Series (1-B)(1-B^24)Y_t,-11.982847916293506,3.670447233816524e-22,25.0,1677.0,-3.4342553892578462,-2.8632650083386295,-2.5676883512313102,True,,,
+KPSS Test,Differenced Series (1-B)(1-B^24)Y_t,,0.1,,,0.739,0.463,0.347,,0.010213917948661786,39.0,True

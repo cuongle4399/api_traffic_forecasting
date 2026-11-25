@@ -1,0 +1,7 @@
+Model,RMSE,MAE,MAPE (%)
+Holt-Winters Exp Smoothing,2206.85,1369.54,23.36
+Proposed SARIMA (Box-Jenkins),2281.79,1457.75,24.42
+Seasonal Naive (Lag 24),2479.09,1643.97,26.85
+"ARIMA (1,1,1) [No Seasonality]",2501.83,1581.02,29.76
+Moving Average (SMA-24),2818.41,1889.04,31.56
+Naive (Lag 1),2984.6,2064.53,33.31
