@@ -417,7 +417,7 @@ def add_dynamic_table_of_contents(doc):
         ("5.7. Triển khai Ứng dụng Web Dashboard và Hướng dẫn Thử nghiệm Trực quan", "16", 1, False),
         ("5.7.1. Kiến trúc tổng thể và tích hợp mô hình dự báo thời gian thực", "16", 2, False),
         ("5.7.2. Đặc tả 3 phân hệ chức năng tương tác trên Web Dashboard", "17", 2, False),
-        ("5.7.3. Khung hình minh chứng demo giao diện và hướng dẫn dán ảnh nghiệm thu", "18", 2, False),
+        ("5.7.3. Minh chứng hình ảnh thực nghiệm trên giao diện Web Dashboard", "18", 2, False),
         ("CHƯƠNG 6: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "20", 0, True),
         ("6.1. Kết quả đạt được", "20", 1, False),
         ("6.2. Ưu điểm và hạn chế của mô hình", "20", 1, False),
@@ -1176,28 +1176,28 @@ def build_word_document():
     add_bullet_p(doc, "Thẻ 2 - Phát hiện Sự cố Bất thường (Ngưỡng 3-sigma): Hiển thị dải ngưỡng động uốn lượn theo thời gian và tự động đánh dấu các điểm tăng vọt (Spike) bằng tam giác đỏ và sụt giảm (Drop) bằng tam giác tím, kèm bảng danh sách các giờ xảy ra sự cố.")
     add_bullet_p(doc, "Thẻ 3 - Dữ liệu Gốc & So sánh Mô hình: Trực quan hóa toàn bộ 2.160 giờ dữ liệu với đường phân chia ranh giới tập huấn luyện (80%) và kiểm thử (20%), kèm bảng đối sánh định lượng hiệu năng của SARIMA so với các mô hình cơ sở.")
 
-    add_heading_3(doc, "5.7.3. Khung hình minh chứng demo giao diện và hướng dẫn dán ảnh nghiệm thu")
-    add_body_p(doc, "Hệ thống Web Dashboard đã được khởi chạy thành công trên máy chủ cục bộ tại địa chỉ cổng: http://localhost:8501. Dưới đây là 3 khung tiêu chuẩn dành cho sinh viên thực hiện dán ảnh chụp màn hình thực tế từ 3 thẻ giao diện:")
+    add_heading_3(doc, "5.7.3. Minh chứng hình ảnh thực nghiệm trên giao diện Web Dashboard")
+    add_body_p(doc, "Hệ thống Web Dashboard đã được khởi chạy thành công và chụp màn hình trực tiếp từ 3 thẻ phân hệ hoạt động thực tế trên máy chủ:")
 
-    add_demo_screenshot_box(
+    add_image_with_caption(
         doc,
-        "Thẻ 1: Kết quả Dự báo ngoài mẫu của Mô hình SARIMA",
-        "Giao diện biểu đồ đường trực quan so sánh chuỗi thực tế, chuỗi dự báo SARIMA và dải tin cậy 95%.",
-        "Hình 5.4: Giao diện Thẻ 1 - Kết quả Dự báo ngoài mẫu của Mô hình SARIMA"
+        "web_api_traffic_forecasting/figures/web_tab1_forecast.png",
+        "Hình 5.4: Giao diện Thẻ 1 - Kết quả Dự báo ngoài mẫu của Mô hình SARIMA trên Web Dashboard",
+        width=Inches(6.2)
     )
     
-    add_demo_screenshot_box(
+    add_image_with_caption(
         doc,
-        "Thẻ 2: Nhận diện Sự cố Bất thường với Ngưỡng động 3-sigma",
-        "Giao diện biểu đồ phát hiện sự cố với dải ngưỡng động +/- 3-sigma, đánh dấu các điểm bất thường và bảng danh mục chi tiết sự cố.",
-        "Hình 5.5: Giao diện Thẻ 2 - Nhận diện Sự cố Bất thường với Ngưỡng động 3-sigma"
+        "web_api_traffic_forecasting/figures/web_tab2_anomalies.png",
+        "Hình 5.5: Giao diện Thẻ 2 - Nhận diện Sự cố Bất thường với Ngưỡng động 3-sigma trên Web Dashboard",
+        width=Inches(6.2)
     )
     
-    add_demo_screenshot_box(
+    add_image_with_caption(
         doc,
-        "Thẻ 3: Dữ liệu Gốc và Bảng Đối sánh Đa mô hình",
-        "Giao diện chuỗi thời gian 90 ngày (2.160 giờ) kèm đường phân chia Train/Test và bảng đối sánh định lượng giữa SARIMA và các mô hình cơ sở.",
-        "Hình 5.6: Giao diện Thẻ 3 - Chuỗi Dữ liệu Quan sát và Bảng Đối sánh Đa mô hình"
+        "web_api_traffic_forecasting/figures/web_tab3_raw_benchmarks.png",
+        "Hình 5.6: Giao diện Thẻ 3 - Chuỗi Dữ liệu Quan sát và Bảng Đối sánh Đa mô hình trên Web Dashboard",
+        width=Inches(6.2)
     )
     
     doc.add_page_break()
