@@ -150,7 +150,7 @@ with tab1:
         # Dải tin cậy 95%
         fig1.add_trace(go.Scatter(
             x=df_fc["timestamp"],
-            y=df_fc["upper_bound"],
+            y=df_fc["upper_ci_95"],
             mode="lines",
             line=dict(width=0),
             showlegend=False,
@@ -158,7 +158,7 @@ with tab1:
         ))
         fig1.add_trace(go.Scatter(
             x=df_fc["timestamp"],
-            y=df_fc["lower_bound"],
+            y=df_fc["lower_ci_95"],
             mode="lines",
             line=dict(width=0),
             fill="tonexty",
@@ -209,22 +209,22 @@ with tab2:
     st.caption("Các điểm tăng vọt (Spike) được đánh dấu bằng tam giác đỏ, các điểm sụt giảm (Drop) đánh dấu bằng tam giác tím.")
     
     if df_anom is not None:
-        spikes = df_anom[df_anom["is_anomaly"] & (df_anom["actual"] > df_anom["upper_threshold"])]
-        drops = df_anom[df_anom["is_anomaly"] & (df_anom["actual"] < df_anom["lower_threshold"])]
+        spikes = df_anom[df_anom["detected_spike"] == 1]
+        drops = df_anom[df_anom["detected_drop"] == 1]
         
         fig2 = go.Figure()
         
         # Ngưỡng động
         fig2.add_trace(go.Scatter(
             x=df_anom["timestamp"],
-            y=df_anom["upper_threshold"],
+            y=df_anom["dyn_upper"],
             mode="lines",
             name="Ngưỡng trên (+3σ)",
             line=dict(color="#d62728", width=1.5, dash="dot")
         ))
         fig2.add_trace(go.Scatter(
             x=df_anom["timestamp"],
-            y=df_anom["lower_threshold"],
+            y=df_anom["dyn_lower"],
             mode="lines",
             name="Ngưỡng dưới (-3σ)",
             line=dict(color="#9467bd", width=1.5, dash="dot")
@@ -274,9 +274,9 @@ with tab2:
         
         # Bảng danh sách các sự cố
         st.markdown("#### 📋 Danh sách các giờ xảy ra sự cố phát hiện được:")
-        anom_list = df_anom[df_anom["is_anomaly"]].copy()
+        anom_list = df_anom[df_anom["detected_anomaly"] == 1].copy()
         if len(anom_list) > 0:
-            anom_list["Loại sự cố"] = np.where(anom_list["actual"] > anom_list["upper_threshold"], "Tăng vọt (Spike / DDoS)", "Sụt giảm (Drop / Outage)")
+            anom_list["Loại sự cố"] = np.where(anom_list["detected_spike"] == 1, "Tăng vọt (Spike / DDoS)", "Sụt giảm (Drop / Outage)")
             anom_display = anom_list[["timestamp", "actual", "Loại sự cố"]].copy()
             anom_display.columns = ["Thời gian xảy ra", "Lưu lượng ghi nhận (req/h)", "Phân loại sự cố"]
             st.dataframe(anom_display, use_container_width=True, hide_index=True)
