@@ -448,7 +448,7 @@ with tab5:
                 <div class="alert-box alert-danger">
                     <strong>🚨 CẢNH BÁO NGUY HIỂM: PHÁT HIỆN LƯU LƯỢNG TĂNG VỌT BẤT THƯỜNG (SPIKE)</strong><br>
                     Lưu lượng ghi nhận ({sim_traffic:,} req/h) vượt ngưỡng an toàn ({upper_limit:,.0f} req/h).<br>
-                    <strong>Hành động khuyến nghị:</strong> Kích hoạt bộ lọc WAF Rate Limiting, xác thực Cloudflare Turnstile, tự động mở rộng thêm {int(np.ceil((sim_traffic - upper_limit)/pod_capacity))} Pods để ngăn ngừa sập máy chủ.
+                    <strong>Hành động khuyến nghị:</strong> Kích hoạt bộ lọc giới hạn tần suất truy vấn (Rate Limiting), kiểm tra tường lửa ứng dụng (WAF), tự động mở rộng thêm {int(np.ceil((sim_traffic - upper_limit)/pod_capacity))} Pods máy chủ để ngăn ngừa quá tải hệ thống.
                 </div>
                 """, unsafe_allow_html=True)
             elif sim_traffic < lower_limit:
