@@ -1,471 +1,320 @@
 """
-Web Application Dashboard for Web API Request Volume Forecasting
-and Anomaly Detection Using Box-Jenkins SARIMA Methodology.
+Ứng dụng Web Đơn giản Giám sát & Dự báo Lưu lượng Web API
+Phương pháp luận: Box-Jenkins SARIMA
 
-Author: Le Quoc Cuong (MSSV: 4651050031)
-University: Quy Nhon University - Faculty of Information Technology
-Course: Time Series Forecasting (Ma hoc phan: 1050316)
-Lecturer: ThS. Le Xuan Viet
+Sinh viên thực hiện: Lê Quốc Cường (MSSV: 4651050031)
+Giảng viên hướng dẫn: ThS. Lê Xuân Việt
+Môn học: Dự báo chuỗi thời gian (Mã HP: 1050316)
+Trường: Đại học Quy Nhơn (QNU)
 GitHub: https://github.com/cuongle4399/api_traffic_forecasting
 """
 
 import os
-import sys
 import json
 import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
-# Set base dir
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
-
+# Cấu hình trang - giao diện sáng, tối giản, thanh lịch
 st.set_page_config(
-    page_title="API Traffic Forecasting & Anomaly Detection - QNU",
+    page_title="Dự báo Lưu lượng Web API - SARIMA (QNU)",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for clean, professional academic aesthetic
+# CSS tùy biến giao diện sáng sủa, gọn nhẹ, dễ nhìn
 st.markdown("""
 <style>
-    .main-header {
-        background: linear-gradient(135deg, #0d233a 0%, #1f4e79 100%);
-        padding: 20px 25px;
-        border-radius: 10px;
-        color: white;
+    .reportview-container, .main .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+    }
+    .main-title-box {
+        background-color: #f0f4f8;
+        border-left: 5px solid #0056b3;
+        padding: 16px 20px;
+        border-radius: 6px;
         margin-bottom: 20px;
     }
-    .main-header h2 {
+    .main-title-box h3 {
         margin: 0;
-        color: #ffffff;
-        font-size: 24px;
+        color: #003366;
+        font-size: 22px;
         font-weight: 700;
     }
-    .main-header p {
+    .main-title-box p {
         margin: 5px 0 0 0;
-        color: #d0e1fd;
+        color: #495057;
         font-size: 14px;
-    }
-    .kpi-card {
-        background-color: #f8f9fa;
-        border-left: 4px solid #1f4e79;
-        padding: 15px;
-        border-radius: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .kpi-title {
-        font-size: 13px;
-        color: #666666;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    .kpi-value {
-        font-size: 24px;
-        color: #0d233a;
-        font-weight: bold;
-        margin-top: 4px;
-    }
-    .kpi-desc {
-        font-size: 12px;
-        color: #28a745;
-        font-weight: 500;
-        margin-top: 2px;
-    }
-    .alert-box {
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin-bottom: 15px;
-    }
-    .alert-danger {
-        background-color: #f8d7da;
-        border-left: 4px solid #dc3545;
-        color: #721c24;
-    }
-    .alert-success {
-        background-color: #d4edda;
-        border-left: 4px solid #28a745;
-        color: #155724;
     }
 </style>
 """, unsafe_allow_html=True)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # -------------------------------------------------------------
-# CACHED DATA LOADERS
+# NẠP DỮ LIỆU
 # -------------------------------------------------------------
 @st.cache_data
-def load_dataset():
+def load_all_data():
+    # 1. Dữ liệu gốc
     data_path = os.path.join(BASE_DIR, "data", "api_traffic_data.csv")
-    if not os.path.exists(data_path):
-        from src.data_loader import generate_api_traffic_dataset
-        generate_api_traffic_dataset(output_path=data_path)
-    df = pd.read_csv(data_path)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-    return df
-
-@st.cache_data
-def load_summary_results():
-    summary_path = os.path.join(BASE_DIR, "output", "summary_results.json")
-    if os.path.exists(summary_path):
-        with open(summary_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-@st.cache_data
-def load_forecast_data():
+    df_raw = pd.read_csv(data_path)
+    df_raw["timestamp"] = pd.to_datetime(df_raw["timestamp"])
+    
+    # 2. Dữ liệu dự báo
     fc_path = os.path.join(BASE_DIR, "output", "05_forecast_results.csv")
-    if os.path.exists(fc_path):
-        df_fc = pd.read_csv(fc_path)
+    df_fc = pd.read_csv(fc_path) if os.path.exists(fc_path) else None
+    if df_fc is not None:
         df_fc["timestamp"] = pd.to_datetime(df_fc["timestamp"])
-        return df_fc
-    return None
-
-@st.cache_data
-def load_anomalies_data():
+        
+    # 3. Dữ liệu bất thường
     anom_path = os.path.join(BASE_DIR, "output", "06_detected_anomalies.csv")
-    if os.path.exists(anom_path):
-        df_anom = pd.read_csv(anom_path)
+    df_anom = pd.read_csv(anom_path) if os.path.exists(anom_path) else None
+    if df_anom is not None:
         df_anom["timestamp"] = pd.to_datetime(df_anom["timestamp"])
-        return df_anom
-    return None
+        
+    # 4. Bảng so sánh mô hình
+    bench_path = os.path.join(BASE_DIR, "output", "08_model_benchmarks.csv")
+    df_bench = pd.read_csv(bench_path) if os.path.exists(bench_path) else None
+    
+    return df_raw, df_fc, df_anom, df_bench
 
-df_full = load_dataset()
-meta = load_summary_results()
-df_forecast = load_forecast_data()
-df_anom = load_anomalies_data()
+df_raw, df_fc, df_anom, df_bench = load_all_data()
 
 # -------------------------------------------------------------
-# SIDEBAR
+# THANH BÊN (SIDEBAR) ĐƠN GIẢN
 # -------------------------------------------------------------
 with st.sidebar:
-    st.image(os.path.join(os.path.dirname(BASE_DIR), "extracted_logo.png") if os.path.exists(os.path.join(os.path.dirname(BASE_DIR), "extracted_logo.png")) else "https://via.placeholder.com/150", width=110)
+    logo_path = os.path.join(os.path.dirname(BASE_DIR), "extracted_logo.png")
+    if os.path.exists(logo_path):
+        st.image(logo_path, width=110)
+        
     st.markdown("### 🎓 THÔNG TIN ĐỀ TÀI")
     st.markdown("""
-    * **Đơn vị**: Khoa Công nghệ Thông tin
-    * **Trường**: Đại học Quy Nhơn (QNU)
-    * **Học phần**: Dự báo chuỗi thời gian
-    * **Mã học phần**: `1050316`
-    * **Giảng viên**: **ThS. Lê Xuân Việt**
-    * **Sinh viên**: **Lê Quốc Cường**
-    * **MSSV**: `4651050031`
+    * **Sinh viên:** **Lê Quốc Cường**
+    * **MSSV:** `4651050031`
+    * **Giảng viên:** **ThS. Lê Xuân Việt**
+    * **Môn học:** Dự báo chuỗi thời gian
+    * **Mã học phần:** `1050316`
+    * **Khoa:** Công nghệ Thông tin - ĐH Quy Nhơn
     """)
     st.markdown("---")
-    st.markdown("### 🔗 LIÊN KẾT GITHUB")
-    st.markdown("[👉 github.com/cuongle4399/api_traffic_forecasting](https://github.com/cuongle4399/api_traffic_forecasting)")
-    
+    st.markdown("### 🔗 KHO LƯU TRỮ GITHUB")
+    st.markdown("[👉 cuongle4399/api_traffic_forecasting](https://github.com/cuongle4399/api_traffic_forecasting)")
     st.markdown("---")
-    st.markdown("### ⚙️ THAM SỐ ĐIỀU HÀNH")
-    threshold_sigma = st.slider("Ngưỡng phát hiện bất thường (σ)", min_value=2.0, max_value=4.0, value=3.0, step=0.1)
-    pod_capacity = st.number_input("Năng lực xử lý / 1 Pod (req/h)", min_value=500, max_value=2500, value=1000, step=100)
+    st.info("💡 **Gợi ý:** Bạn có thể dùng phím `Windows + Shift + S` chụp nhanh biểu đồ ở từng thẻ để dán vào báo cáo Word.")
 
 # -------------------------------------------------------------
-# MAIN HEADER
+# TIÊU ĐỀ CHÍNH
 # -------------------------------------------------------------
 st.markdown("""
-<div class="main-header">
-    <h2>HỆ THỐNG DỰ BÁO LƯU LƯỢNG WEB API & PHÁT HIỆN BẤT THƯỜNG</h2>
-    <p>Phương pháp luận: Box-Jenkins SARIMA (Seasonal Autoregressive Integrated Moving Average) | Chu kỳ 24h (Diurnal Cycle)</p>
+<div class="main-title-box">
+    <h3>HỆ THỐNG DỰ BÁO LƯU LƯỢNG WEB API & PHÁT HIỆN BẤT THƯỜNG</h3>
+    <p>Đề tài ứng dụng mô hình Box-Jenkins SARIMA(0,1,2)(0,1,1)[24] trên chuỗi dữ liệu 90 ngày (2.160 giờ)</p>
 </div>
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------
-# TABS
+# 3 THẺ CHỈ SỐ TỔNG QUAN (METRICS)
 # -------------------------------------------------------------
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📊 Giám sát & Tổng quan",
-    "🔍 Khám phá Dữ liệu (EDA)",
-    "📈 Dự báo Mô hình SARIMA",
-    "🚨 Phát hiện Bất thường & Auto-scaling",
-    "🎮 Mô phỏng Trực tiếp"
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Tổng số giờ quan sát", "2.160 giờ", "90 ngày liên tục")
+col2.metric("Mô hình lựa chọn", "SARIMA(0,1,2)(0,1,1)[24]", "AIC = 25.004,03")
+col3.metric("Sai số dự báo (RMSE)", "2.281,79 req/h", "MAPE: 24,42%")
+col4.metric("Độ chuẩn xác cảnh báo", "100%", "0 cảnh báo sai")
+
+st.markdown("---")
+
+# -------------------------------------------------------------
+# 3 TAB ĐƠN GIẢN, TRỰC QUAN
+# -------------------------------------------------------------
+tab1, tab2, tab3 = st.tabs([
+    "📈 1. Biểu đồ Dự báo SARIMA (Ngoài mẫu)",
+    "🚨 2. Phát hiện Sự cố Bất thường (Ngưỡng 3-sigma)",
+    "📊 3. Dữ liệu Gốc & So sánh Mô hình"
 ])
 
 # =============================================================
-# TAB 1: OVERVIEW
+# TAB 1: DỰ BÁO SARIMA
 # =============================================================
 with tab1:
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-title">Tổng số giờ giám sát</div>
-            <div class="kpi-value">{len(df_full):,} giờ</div>
-            <div class="kpi-desc">90 ngày đo liên tục (1-hour)</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-title">Lưu lượng trung bình</div>
-            <div class="kpi-value">{df_full['request_count'].mean():,.0f} req/h</div>
-            <div class="kpi-desc">Đỉnh: {df_full['request_count'].max():,} req/h</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div class="kpi-card">
-            <div class="kpi-title">Mô hình Tối ưu</div>
-            <div class="kpi-value">SARIMA(0,1,2)(0,1,1)₂₄</div>
-            <div class="kpi-desc">AIC tối thiểu: 25.004,03</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col4:
-        st.markdown("""
-        <div class="kpi-card">
-            <div class="kpi-title">Độ chuẩn xác phát hiện</div>
-            <div class="kpi-value">100.0%</div>
-            <div class="kpi-desc">0 Cảnh báo sai (Zero False Positives)</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    st.markdown("#### Biểu đồ Tương tác Lưu lượng Yêu cầu API (Toàn bộ 90 ngày)")
-    fig_raw = go.Figure()
-    fig_raw.add_trace(go.Scatter(
-        x=df_full["timestamp"],
-        y=df_full["request_count"],
-        mode="lines",
-        name="Lưu lượng thực tế (req/h)",
-        line=dict(color="#1f77b4", width=1.2)
-    ))
+    st.subheader("Kết quả Dự báo ngoài mẫu 432 giờ (18 ngày kiểm thử)")
+    st.caption("Đường màu cam biểu thị giá trị dự báo SARIMA, dải màu xám là khoảng tin cậy 95%, so sánh trực tiếp với đường màu xanh thực tế.")
     
-    # Ground truth anomalies
-    anom_pts = df_full[df_full["is_anomaly"] == 1]
-    fig_raw.add_trace(go.Scatter(
-        x=anom_pts["timestamp"],
-        y=anom_pts["request_count"],
-        mode="markers",
-        name="Sự cố thực tế (DDoS / Outage)",
-        marker=dict(color="#d62728", size=8, symbol="diamond")
-    ))
-    fig_raw.update_layout(
-        height=450,
-        margin=dict(l=20, r=20, t=30, b=20),
-        hovermode="x unified",
-        xaxis_title="Thời gian (Timestamp)",
-        yaxis_title="Lưu lượng yêu cầu (Request / Hour)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    st.plotly_chart(fig_raw, use_container_width=True)
+    if df_fc is not None:
+        fig1 = go.Figure()
+        
+        # Dải tin cậy 95%
+        fig1.add_trace(go.Scatter(
+            x=df_fc["timestamp"],
+            y=df_fc["upper_bound"],
+            mode="lines",
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo="skip"
+        ))
+        fig1.add_trace(go.Scatter(
+            x=df_fc["timestamp"],
+            y=df_fc["lower_bound"],
+            mode="lines",
+            line=dict(width=0),
+            fill="tonexty",
+            fillcolor="rgba(180, 200, 230, 0.35)",
+            name="Khoảng tin cậy 95%"
+        ))
+        
+        # Đường thực tế
+        fig1.add_trace(go.Scatter(
+            x=df_fc["timestamp"],
+            y=df_fc["actual"],
+            mode="lines",
+            name="Lưu lượng thực tế",
+            line=dict(color="#1f77b4", width=2)
+        ))
+        
+        # Đường dự báo SARIMA
+        fig1.add_trace(go.Scatter(
+            x=df_fc["timestamp"],
+            y=df_fc["forecast"],
+            mode="lines",
+            name="Dự báo SARIMA",
+            line=dict(color="#ff7f0e", width=2.5, dash="dash")
+        ))
+        
+        fig1.update_layout(
+            height=460,
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis_title="Thời gian (Giờ)",
+            yaxis_title="Số lượng Request / Giờ",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            plot_bgcolor="#ffffff",
+            paper_bgcolor="#ffffff"
+        )
+        fig1.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+        fig1.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+        
+        st.plotly_chart(fig1, use_container_width=True)
+        
+        st.success("✅ **Nhận xét:** Mô hình SARIMA dự báo bám sát chu kỳ ngày đêm 24 giờ. Dự báo chính xác đỉnh cao điểm ban ngày và đáy thấp điểm rạng sáng, đạt hệ số tương quan cao ngoài mẫu.")
 
 # =============================================================
-# TAB 2: EDA & STATIONARITY
+# TAB 2: PHÁT HIỆN BẤT THƯỜNG
 # =============================================================
 with tab2:
-    st.markdown("#### Phân rã Chuỗi thời gian (Additive Seasonal Decomposition, s = 24 giờ)")
-    st.markdown("Chuỗi dữ liệu được bóc tách thành 4 thành phần: Quan sát thực tế, Xu hướng dài hạn (Trend), Chu kỳ ngày đêm 24 giờ (Seasonal) và Nhiễu ngẫu nhiên (Residuals).")
+    st.subheader("Nhận diện Sự cố Lưu lượng với Ngưỡng động 3 Độ lệch chuẩn (3-sigma)")
+    st.caption("Các điểm tăng vọt (Spike) được đánh dấu bằng tam giác đỏ, các điểm sụt giảm (Drop) đánh dấu bằng tam giác tím.")
     
-    col_img1, col_img2 = st.columns(2)
-    with col_img1:
-        st.image(os.path.join(BASE_DIR, "figures", "02_seasonal_decomposition.png"), caption="Hình: Bóc tách thành phần Xu hướng và Mùa vụ ngày đêm", use_container_width=True)
-    with col_img2:
-        st.image(os.path.join(BASE_DIR, "figures", "03_stationarity_differencing.png"), caption="Hình: Kiểm định chuỗi trước và sau khi lấy sai phân (1-B)(1-B^24)", use_container_width=True)
-        
-    st.markdown("#### Kết quả Kiểm định Tính dừng Thống kê (ADF & KPSS)")
-    stat_df = pd.DataFrame([
-        {"Phép kiểm định": "Augmented Dickey-Fuller (ADF)", "Dạng chuỗi": "Chuỗi gốc Y_t", "Thống kê": -4.3038, "p-value": "4.38 x 10^-4", "Kết luận": "Còn chứa xu hướng và mùa vụ mạnh"},
-        {"Phép kiểm định": "KPSS Test", "Dạng chuỗi": "Chuỗi gốc Y_t", "Thống kê": 2.3189, "p-value": "0.0100", "Kết luận": "Không dừng (Bác bỏ giả thuyết dừng)"},
-        {"Phép kiểm định": "Augmented Dickey-Fuller (ADF)", "Dạng chuỗi": "Chuỗi sau sai phân (1-B)(1-B^24)", "Thống kê": -11.9828, "p-value": "3.67 x 10^-22", "Kết luận": "DỪNG HOÀN TOÀN (p < 0.001)"},
-        {"Phép kiểm định": "KPSS Test", "Dạng chuỗi": "Chuỗi sau sai phân (1-B)(1-B^24)", "Thống kê": 0.0102, "p-value": "0.1000", "Kết luận": "DỪNG HOÀN HẢO (Chấp nhận giả thuyết dừng)"}
-    ])
-    st.dataframe(stat_df, use_container_width=True, hide_index=True)
-
-# =============================================================
-# TAB 3: FORECASTING
-# =============================================================
-with tab3:
-    st.markdown("#### Kết quả Dự báo Ngoài Mẫu (Out-of-sample Forecast) trên Tập Kiểm Thử")
-    if df_forecast is not None:
-        fig_fc = go.Figure()
-        fig_fc.add_trace(go.Scatter(
-            x=df_forecast["timestamp"],
-            y=df_forecast["actual"],
-            mode="lines",
-            name="Lưu lượng thực tế (Actual)",
-            line=dict(color="#1f77b4", width=1.5)
-        ))
-        fig_fc.add_trace(go.Scatter(
-            x=df_forecast["timestamp"],
-            y=df_forecast["forecast"],
-            mode="lines",
-            name="Dự báo SARIMA (Point Forecast)",
-            line=dict(color="#d62728", width=1.8, dash="dash")
-        ))
-        fig_fc.add_trace(go.Scatter(
-            x=df_forecast["timestamp"],
-            y=df_forecast["upper_ci_95"],
-            mode="lines",
-            name="Dải tin cậy trên (95% CI)",
-            line=dict(width=0),
-            showlegend=False
-        ))
-        fig_fc.add_trace(go.Scatter(
-            x=df_forecast["timestamp"],
-            y=df_forecast["lower_ci_95"],
-            mode="lines",
-            name="Khoảng tin cậy 95%",
-            fill="tonexty",
-            fillcolor="rgba(255, 152, 150, 0.3)",
-            line=dict(width=0)
-        ))
-        fig_fc.update_layout(
-            height=450,
-            margin=dict(l=20, r=20, t=30, b=20),
-            hovermode="x unified",
-            xaxis_title="Thời gian (Timestamp)",
-            yaxis_title="Lưu lượng yêu cầu (Request / Hour)",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig_fc, use_container_width=True)
-        
-    col_fc1, col_fc2 = st.columns(2)
-    with col_fc1:
-        st.markdown("##### 4 Biểu đồ Chẩn đoán Phần dư Chuẩn hóa (Ljung-Box đạt chuẩn White Noise)")
-        st.image(os.path.join(BASE_DIR, "figures", "05_sarima_diagnostic_plots.png"), use_container_width=True)
-    with col_fc2:
-        st.markdown("##### Đối sánh Hiệu năng giữa SARIMA và các Mô hình Baseline")
-        st.image(os.path.join(BASE_DIR, "figures", "08_model_comparison_metrics.png"), use_container_width=True)
-
-# =============================================================
-# TAB 4: ANOMALY DETECTION & AUTOSCALING
-# =============================================================
-with tab4:
-    st.markdown("#### Trung tâm Phát hiện Dị thường Lưu lượng & Cơ chế Ngưỡng Động 3-Sigma")
     if df_anom is not None:
-        fig_anom = go.Figure()
-        fig_anom.add_trace(go.Scatter(
+        spikes = df_anom[df_anom["is_anomaly"] & (df_anom["actual"] > df_anom["upper_threshold"])]
+        drops = df_anom[df_anom["is_anomaly"] & (df_anom["actual"] < df_anom["lower_threshold"])]
+        
+        fig2 = go.Figure()
+        
+        # Ngưỡng động
+        fig2.add_trace(go.Scatter(
+            x=df_anom["timestamp"],
+            y=df_anom["upper_threshold"],
+            mode="lines",
+            name="Ngưỡng trên (+3σ)",
+            line=dict(color="#d62728", width=1.5, dash="dot")
+        ))
+        fig2.add_trace(go.Scatter(
+            x=df_anom["timestamp"],
+            y=df_anom["lower_threshold"],
+            mode="lines",
+            name="Ngưỡng dưới (-3σ)",
+            line=dict(color="#9467bd", width=1.5, dash="dot")
+        ))
+        
+        # Đường thực tế
+        fig2.add_trace(go.Scatter(
             x=df_anom["timestamp"],
             y=df_anom["actual"],
             mode="lines",
             name="Lưu lượng thực tế",
-            line=dict(color="#1f77b4", width=1.2)
-        ))
-        fig_anom.add_trace(go.Scatter(
-            x=df_anom["timestamp"],
-            y=df_anom["forecast"],
-            mode="lines",
-            name="Kỳ vọng SARIMA",
-            line=dict(color="#2ca02c", dash="dot")
+            line=dict(color="#4a5568", width=1.5)
         ))
         
-        # Dynamic bounds
-        sigma_val = (df_anom["dyn_upper"] - df_anom["forecast"]) / 3.0
-        dyn_upper_adj = df_anom["forecast"] + threshold_sigma * sigma_val
-        dyn_lower_adj = np.maximum(0, df_anom["forecast"] - threshold_sigma * sigma_val)
-        
-        fig_anom.add_trace(go.Scatter(
-            x=df_anom["timestamp"],
-            y=dyn_upper_adj,
-            mode="lines",
-            name=f"Ngưỡng trên (+{threshold_sigma}σ)",
-            line=dict(color="#ff7f0e", dash="dash")
-        ))
-        fig_anom.add_trace(go.Scatter(
-            x=df_anom["timestamp"],
-            y=dyn_lower_adj,
-            mode="lines",
-            name=f"Ngưỡng dưới (-{threshold_sigma}σ)",
-            line=dict(color="#ff7f0e", dash="dash")
-        ))
-        
-        # Detect with custom threshold
-        spikes = df_anom[df_anom["actual"] > dyn_upper_adj]
-        drops = df_anom[df_anom["actual"] < dyn_lower_adj]
-        
-        fig_anom.add_trace(go.Scatter(
+        # Điểm bất thường Spike
+        fig2.add_trace(go.Scatter(
             x=spikes["timestamp"],
             y=spikes["actual"],
             mode="markers",
-            name="Cảnh báo Tăng vọt (DDoS Spike)",
+            name="Tăng vọt bất thường (Spike)",
             marker=dict(color="#d62728", size=10, symbol="triangle-up")
         ))
-        fig_anom.add_trace(go.Scatter(
+        
+        # Điểm bất thường Drop
+        fig2.add_trace(go.Scatter(
             x=drops["timestamp"],
             y=drops["actual"],
             mode="markers",
-            name="Cảnh báo Sụt giảm (Outage Drop)",
+            name="Sụt giảm bất thường (Drop)",
             marker=dict(color="#9467bd", size=10, symbol="triangle-down")
         ))
-        fig_anom.update_layout(
-            height=450,
-            margin=dict(l=20, r=20, t=30, b=20),
-            hovermode="x unified",
-            xaxis_title="Thời gian",
-            yaxis_title="Lưu lượng yêu cầu (Req / Hour)",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-        )
-        st.plotly_chart(fig_anom, use_container_width=True)
         
-    st.markdown("#### ☸️ Khuyến nghị Tự động Co giãn Máy chủ (Kubernetes Auto-scaling Recommendation)")
-    st.markdown(f"Dựa trên lưu lượng dự báo của mô hình SARIMA, hệ thống tự động tính toán số lượng Pods cần thiết trước giờ cao điểm: `Số Pods = ceil(Lưu lượng dự báo / {pod_capacity:,} req/h)`. Nhờ vậy loại bỏ hoàn toàn độ trễ khởi động máy chủ (Cold Start Lag).")
-    
-    if df_forecast is not None:
-        pods_needed = np.ceil(df_forecast["forecast"] / pod_capacity).astype(int)
-        fig_pod = go.Figure()
-        fig_pod.add_trace(go.Scatter(
-            x=df_forecast["timestamp"],
-            y=pods_needed,
-            mode="lines",
-            name="Số Pods cần cấp phát tự động",
-            line=dict(color="#2ca02c", width=2, shape="hv")
-        ))
-        fig_pod.update_layout(
-            height=280,
+        fig2.update_layout(
+            height=440,
             margin=dict(l=20, r=20, t=20, b=20),
-            xaxis_title="Thời gian (Timestamp)",
-            yaxis_title="Số lượng Pods dự kiến",
-            hovermode="x unified"
+            xaxis_title="Thời gian (Giờ)",
+            yaxis_title="Lưu lượng (Req / Giờ)",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            plot_bgcolor="#ffffff",
+            paper_bgcolor="#ffffff"
         )
-        st.plotly_chart(fig_pod, use_container_width=True)
+        fig2.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+        fig2.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+        
+        st.plotly_chart(fig2, use_container_width=True)
+        
+        # Bảng danh sách các sự cố
+        st.markdown("#### 📋 Danh sách các giờ xảy ra sự cố phát hiện được:")
+        anom_list = df_anom[df_anom["is_anomaly"]].copy()
+        if len(anom_list) > 0:
+            anom_list["Loại sự cố"] = np.where(anom_list["actual"] > anom_list["upper_threshold"], "Tăng vọt (Spike / DDoS)", "Sụt giảm (Drop / Outage)")
+            anom_display = anom_list[["timestamp", "actual", "Loại sự cố"]].copy()
+            anom_display.columns = ["Thời gian xảy ra", "Lưu lượng ghi nhận (req/h)", "Phân loại sự cố"]
+            st.dataframe(anom_display, use_container_width=True, hide_index=True)
 
 # =============================================================
-# TAB 5: LIVE SIMULATION
+# TAB 3: DỮ LIỆU GỐC & ĐỐI SÁNH MÔ HÌNH
 # =============================================================
-with tab5:
-    st.markdown("#### Mô phỏng Kiểm tra Sự cố Lưu lượng Thời gian thực (Real-time Stress Test)")
-    col_sim1, col_sim2 = st.columns([1, 2])
-    with col_sim1:
-        sim_hour = st.selectbox("Khung giờ mô phỏng trong ngày", options=list(range(24)), format_func=lambda h: f"{h:02d}:00")
-        sim_traffic = st.number_input("Số lượng request gửi đến trong 1 giờ", min_value=0, max_value=50000, value=6500, step=500)
-        btn_check = st.button("🚀 Chạy Phân Tích & Đánh Giá", type="primary", use_container_width=True)
-        
-    with col_sim2:
-        if btn_check:
-            # Baseline expectation for this hour
-            exp_traffic = 5000 + 1800 * np.sin(2 * np.pi * (sim_hour - 8) / 24) + 600 * np.sin(4 * np.pi * (sim_hour - 8) / 24)
-            upper_limit = exp_traffic + threshold_sigma * 320
-            lower_limit = max(0, exp_traffic - threshold_sigma * 320)
-            
-            st.markdown(f"**Kết quả thẩm định thuật toán SARIMA tại khung giờ {sim_hour:02d}:00:**")
-            st.write(f"- Lưu lượng kỳ vọng bình thường: **{exp_traffic:,.0f} req/h**")
-            st.write(f"- Giới hạn an toàn trên (+{threshold_sigma}σ): **{upper_limit:,.0f} req/h**")
-            st.write(f"- Giới hạn an toàn dưới (-{threshold_sigma}σ): **{lower_limit:,.0f} req/h**")
-            
-            if sim_traffic > upper_limit:
-                st.markdown(f"""
-                <div class="alert-box alert-danger">
-                    <strong>🚨 CẢNH BÁO NGUY HIỂM: PHÁT HIỆN LƯU LƯỢNG TĂNG VỌT BẤT THƯỜNG (SPIKE)</strong><br>
-                    Lưu lượng ghi nhận ({sim_traffic:,} req/h) vượt ngưỡng an toàn ({upper_limit:,.0f} req/h).<br>
-                    <strong>Hành động khuyến nghị:</strong> Kích hoạt bộ lọc giới hạn tần suất truy vấn (Rate Limiting), kiểm tra tường lửa ứng dụng (WAF), tự động mở rộng thêm {int(np.ceil((sim_traffic - upper_limit)/pod_capacity))} Pods máy chủ để ngăn ngừa quá tải hệ thống.
-                </div>
-                """, unsafe_allow_html=True)
-            elif sim_traffic < lower_limit:
-                st.markdown(f"""
-                <div class="alert-box alert-danger">
-                    <strong>⚠️ CẢNH BÁO SỰ CỐ: PHÁT HIỆN SỤT GIẢM LƯU LƯỢNG NGHIÊM TRỌNG (DROP)</strong><br>
-                    Lưu lượng ghi nhận ({sim_traffic:,} req/h) sụt giảm bất thường dưới ngưỡng tối thiểu ({lower_limit:,.0f} req/h).<br>
-                    <strong>Hành động khuyến nghị:</strong> Kiểm tra kết nối mạng Gateway, rà soát nhật ký kết nối cơ sở dữ liệu và tình trạng phân giải DNS khẩn cấp.
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div class="alert-box alert-success">
-                    <strong>✅ HỆ THỐNG VẬN HÀNH BÌNH THƯỜNG (HEALTHY STATUS)</strong><br>
-                    Lưu lượng ghi nhận ({sim_traffic:,} req/h) nằm hoàn toàn trong giới hạn thống kê an toàn.<br>
-                    <strong>Hành động:</strong> Duy trì cấp phát {int(np.ceil(sim_traffic/pod_capacity))} Pods hoạt động ổn định.
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("💡 Chọn khung giờ và nhập số lượng request cần thử nghiệm ở cột bên trái, sau đó nhấn nút 'Chạy Phân Tích & Đánh Giá'.")
+with tab3:
+    st.subheader("Toàn bộ Chuỗi Dữ liệu Quan sát (90 Ngày - 2.160 Giờ)")
+    
+    fig3 = go.Figure()
+    fig3.add_trace(go.Scatter(
+        x=df_raw["timestamp"],
+        y=df_raw["request_count"],
+        mode="lines",
+        name="Lưu lượng API gốc",
+        line=dict(color="#0056b3", width=1.5)
+    ))
+    
+    # Đánh dấu phân chia Train / Test (1.728 giờ)
+    split_date = df_raw["timestamp"].iloc[1728]
+    fig3.add_vline(x=split_date, line_width=2, line_dash="dash", line_color="#dc3545")
+    fig3.add_annotation(x=split_date, y=df_raw["request_count"].max(), text="Phân chia Tập Huấn Luyện (80%) / Kiểm Thử (20%)", showarrow=True, arrowhead=1)
+    
+    fig3.update_layout(
+        height=380,
+        margin=dict(l=20, r=20, t=20, b=20),
+        xaxis_title="Thời gian",
+        yaxis_title="Số lượng Request / Giờ",
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff"
+    )
+    fig3.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+    fig3.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#f0f0f0")
+    st.plotly_chart(fig3, use_container_width=True)
+    
+    st.markdown("#### 🏆 Bảng Xếp Hạng & Đối Sánh Hiệu Năng Các Mô Hình Dự Báo:")
+    if df_bench is not None:
+        st.dataframe(df_bench, use_container_width=True, hide_index=True)
+    else:
+        st.info("Bảng so sánh mô hình cơ sở hiển thị tại file: output/08_model_benchmarks.csv")
