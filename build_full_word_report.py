@@ -416,7 +416,7 @@ def add_dynamic_table_of_contents(doc):
         ("5.6. Ứng dụng trong tự động co giãn tài nguyên hệ thống", "16", 1, False),
         ("5.7. Triển khai Ứng dụng Web Dashboard và Hướng dẫn Thử nghiệm Trực quan", "16", 1, False),
         ("5.7.1. Kiến trúc tổng thể và tích hợp mô hình dự báo thời gian thực", "16", 2, False),
-        ("5.7.2. Đặc tả 5 phân hệ chức năng tương tác trên Web Dashboard", "17", 2, False),
+        ("5.7.2. Đặc tả 3 phân hệ chức năng tương tác trên Web Dashboard", "17", 2, False),
         ("5.7.3. Khung hình minh chứng demo giao diện và hướng dẫn dán ảnh nghiệm thu", "18", 2, False),
         ("CHƯƠNG 6: KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "20", 0, True),
         ("6.1. Kết quả đạt được", "20", 1, False),
@@ -746,11 +746,9 @@ def build_word_document():
         ("Hình 5.1", "Kết quả dự báo ngoài mẫu của mô hình SARIMA so với thực tế kèm dải tin cậy 95%"),
         ("Hình 5.2", "Biểu đồ so sánh trực quan các chỉ số sai số RMSE, MAE, MAPE giữa các mô hình"),
         ("Hình 5.3", "Kết quả phát hiện bất thường lưu lượng API với ngưỡng động 3-sigma và chuỗi sai số phần dư"),
-        ("Hình 5.4", "Giao diện Phân hệ Giám sát & Tổng quan Lưu lượng API Thời gian thực (Tab 1)"),
-        ("Hình 5.5", "Giao diện Khám phá Dữ liệu và Kiểm định Nghiệm đơn vị (Tab 2)"),
-        ("Hình 5.6", "Giao diện Dự báo Tương lai và Đối sánh Đa mô hình Cơ sở (Tab 3)"),
-        ("Hình 5.7", "Giao diện Phát hiện Bất thường và Đề xuất Tự động Co giãn Pods (Tab 4)"),
-        ("Hình 5.8", "Giao diện Mô phỏng Lưu lượng và Ra quyết định Điều phối Tức thời (Tab 5)")
+        ("Hình 5.4", "Giao diện Thẻ 1 - Kết quả Dự báo ngoài mẫu của Mô hình SARIMA"),
+        ("Hình 5.5", "Giao diện Thẻ 2 - Nhận diện Sự cố Bất thường với Ngưỡng động 3-sigma"),
+        ("Hình 5.6", "Giao diện Thẻ 3 - Chuỗi Dữ liệu Quan sát và Bảng Đối sánh Đa mô hình")
     ]
     for f_id, f_name in fig_list:
         add_body_p(doc, f"{f_id}: {f_name}")
@@ -1172,50 +1170,34 @@ def build_word_document():
         title="Công thức quy hoạch hạ tầng vi dịch vụ Kubernetes:"
     )
 
-    add_heading_3(doc, "5.7.2. Đặc tả 5 phân hệ chức năng tương tác trên Web Dashboard")
-    add_body_p(doc, "Giao diện Web Dashboard được tổ chức thành 5 thẻ điều khiển (Tabs) chuyên biệt, hỗ trợ toàn diện các tác vụ giám sát, nghiên cứu và vận hành:")
-    add_bullet_p(doc, "Thẻ 1 - Giám sát & Tổng quan (Monitoring & Overview): Trực quan hóa 4 thẻ chỉ số KPI cốt lõi (Tổng lưu lượng quan sát 23.961.428 requests, Lưu lượng trung bình giờ 11.093 req/h, Tải đỉnh cực đại 28.450 req/h, và Tỷ lệ sự cố 1,48%). Kèm theo đó là biểu đồ tương tác đa chiều cho phép phóng to (Zoom), dịch chuyển (Pan), trỏ chuột xem chi tiết và bật/tắt dải ngưỡng động cũng như các điểm sự cố bất thường.")
-    add_bullet_p(doc, "Thẻ 2 - Khám phá Dữ liệu (EDA & Stationarity Analysis): Tự động phân rã chuỗi thời gian thành 3 thành phần (Xu thế dài hạn Trend, Dao động mùa vụ 24 giờ Seasonal, và Phần dư ngẫu nhiên Residuals). Đồng thời hiển thị bảng kiểm định nghiệm đơn vị ADF và KPSS cập nhật động, giúp người dùng kiểm chứng tính dừng của dữ liệu.")
-    add_bullet_p(doc, "Thẻ 3 - Dự báo Mô hình SARIMA (Forecasting & Benchmarking): Biểu diễn đồ thị dự báo ngoài mẫu 432 giờ kèm dải tin cậy 95% đối sánh với chuỗi thực tế. Đồng thời tích hợp bảng xếp hạng và đối sánh định lượng 6 mô hình chuỗi thời gian theo các chỉ số RMSE, MAE, MAPE.")
-    add_bullet_p(doc, "Thẻ 4 - Phát hiện Bất thường & Tự động Co giãn (Anomaly Detection & Pod Sizing): Trực quan hóa Ma trận nhầm lẫn (Confusion Matrix) với độ chuẩn xác tuyệt đối 100%, bảng nhật ký sự cố chi tiết (Incident Log) và bảng kế hoạch cấp phát số lượng Pods Kubernetes theo từng khung giờ dự báo.")
-    add_bullet_p(doc, "Thẻ 5 - Mô phỏng Trực tiếp (Live Hour Telemetry Simulation): Cho phép kỹ sư chọn một giờ bất kỳ trong 2.160 giờ vận hành thông qua thanh trượt. Hệ thống lập tức đối chiếu dữ liệu tức thời, đánh giá mức độ rủi ro (Bình thường, Cảnh báo, Nguy cơ tấn công DDoS, hoặc Sự cố sập dịch vụ) và đưa ra hành động khắc phục cụ thể.")
+    add_heading_3(doc, "5.7.2. Đặc tả 3 phân hệ chức năng tương tác trên Web Dashboard")
+    add_body_p(doc, "Giao diện Web Dashboard được thiết kế theo phong cách tối giản, trực quan và hiện đại, tập trung vào 3 phân hệ chức năng cốt lõi:")
+    add_bullet_p(doc, "Thẻ 1 - Biểu đồ Dự báo SARIMA (Ngoài mẫu): Trực quan hóa đường dự báo ngoài mẫu 432 giờ kèm dải tin cậy 95% đối sánh với chuỗi thực tế. Biểu đồ tương tác cho phép phóng to, dịch chuyển và xem chi tiết giá trị dự báo theo từng giờ.")
+    add_bullet_p(doc, "Thẻ 2 - Phát hiện Sự cố Bất thường (Ngưỡng 3-sigma): Hiển thị dải ngưỡng động uốn lượn theo thời gian và tự động đánh dấu các điểm tăng vọt (Spike) bằng tam giác đỏ và sụt giảm (Drop) bằng tam giác tím, kèm bảng danh sách các giờ xảy ra sự cố.")
+    add_bullet_p(doc, "Thẻ 3 - Dữ liệu Gốc & So sánh Mô hình: Trực quan hóa toàn bộ 2.160 giờ dữ liệu với đường phân chia ranh giới tập huấn luyện (80%) và kiểm thử (20%), kèm bảng đối sánh định lượng hiệu năng của SARIMA so với các mô hình cơ sở.")
 
     add_heading_3(doc, "5.7.3. Khung hình minh chứng demo giao diện và hướng dẫn dán ảnh nghiệm thu")
-    add_body_p(doc, "Hệ thống Web Dashboard đã được khởi chạy thành công trên máy chủ cục bộ tại địa chỉ cổng: http://localhost:8501. Dưới đây là các khung tiêu chuẩn dành cho sinh viên và hội đồng đánh giá thực hiện dán ảnh chụp màn hình thực tế từ trình duyệt web:")
+    add_body_p(doc, "Hệ thống Web Dashboard đã được khởi chạy thành công trên máy chủ cục bộ tại địa chỉ cổng: http://localhost:8501. Dưới đây là 3 khung tiêu chuẩn dành cho sinh viên thực hiện dán ảnh chụp màn hình thực tế từ 3 thẻ giao diện:")
 
     add_demo_screenshot_box(
         doc,
-        "Phân hệ 1: Giám sát & Tổng quan Lưu lượng API Thời gian thực (Tab 1)",
-        "Giao diện hiển thị 4 thẻ chỉ số KPI hệ thống, biểu đồ đường lưu lượng API tương tác đa chiều Plotly kèm bộ chọn hiển thị ngưỡng động 3-sigma và các điểm bất thường.",
-        "Hình 5.4: Giao diện Phân hệ Giám sát & Tổng quan Lưu lượng API Thời gian thực (Tab 1)"
+        "Thẻ 1: Kết quả Dự báo ngoài mẫu của Mô hình SARIMA",
+        "Giao diện biểu đồ đường trực quan so sánh chuỗi thực tế, chuỗi dự báo SARIMA và dải tin cậy 95%.",
+        "Hình 5.4: Giao diện Thẻ 1 - Kết quả Dự báo ngoài mẫu của Mô hình SARIMA"
     )
     
     add_demo_screenshot_box(
         doc,
-        "Phân hệ 2: Khám phá Dữ liệu và Kiểm định Nghiệm đơn vị (Tab 2)",
-        "Giao diện bóc tách thành phần chuỗi thời gian (Quan sát, Xu hướng, Mùa vụ 24h, Phần dư) và bảng kiểm định nghiệm đơn vị thống kê ADF, KPSS.",
-        "Hình 5.5: Giao diện Khám phá Dữ liệu và Kiểm định Nghiệm đơn vị (Tab 2)"
+        "Thẻ 2: Nhận diện Sự cố Bất thường với Ngưỡng động 3-sigma",
+        "Giao diện biểu đồ phát hiện sự cố với dải ngưỡng động +/- 3-sigma, đánh dấu các điểm bất thường và bảng danh mục chi tiết sự cố.",
+        "Hình 5.5: Giao diện Thẻ 2 - Nhận diện Sự cố Bất thường với Ngưỡng động 3-sigma"
     )
     
     add_demo_screenshot_box(
         doc,
-        "Phân hệ 3: Dự báo Tương lai và Đối sánh Đa mô hình Cơ sở (Tab 3)",
-        "Giao diện đồ thị dự báo ngoài mẫu 432 giờ kèm dải tin cậy 95% và bảng đối sánh định lượng 6 mô hình thuật toán theo RMSE, MAE, MAPE.",
-        "Hình 5.6: Giao diện Dự báo Tương lai và Đối sánh Đa mô hình Cơ sở (Tab 3)"
-    )
-    
-    add_demo_screenshot_box(
-        doc,
-        "Phân hệ 4: Phát hiện Bất thường và Đề xuất Tự động Co giãn Pods (Tab 4)",
-        "Giao diện hiển thị ma trận nhầm lẫn, bảng nhật ký sự cố chi tiết và bảng đề xuất cấp phát số lượng Pods Kubernetes theo tải dự báo.",
-        "Hình 5.7: Giao diện Phát hiện Bất thường và Đề xuất Tự động Co giãn Pods (Tab 4)"
-    )
-    
-    add_demo_screenshot_box(
-        doc,
-        "Phân hệ 5: Mô phỏng Lưu lượng và Ra quyết định Điều phối Tức thời (Tab 5)",
-        "Giao diện tương tác thanh trượt chọn giờ mô phỏng, bảng phân tích rủi ro thời gian thực và khuyến nghị hành động phản ứng sự cố cho SRE.",
-        "Hình 5.8: Giao diện Mô phỏng Lưu lượng và Ra quyết định Điều phối Tức thời (Tab 5)"
+        "Thẻ 3: Dữ liệu Gốc và Bảng Đối sánh Đa mô hình",
+        "Giao diện chuỗi thời gian 90 ngày (2.160 giờ) kèm đường phân chia Train/Test và bảng đối sánh định lượng giữa SARIMA và các mô hình cơ sở.",
+        "Hình 5.6: Giao diện Thẻ 3 - Chuỗi Dữ liệu Quan sát và Bảng Đối sánh Đa mô hình"
     )
     
     doc.add_page_break()
@@ -1387,8 +1369,13 @@ def build_word_document():
     
     # Save Document
     output_doc_path = "Bao_Cao_Du_Doan_Thoi_Gian_Web_API_SARIMA_Le_Quoc_Cuong.docx"
-    doc.save(output_doc_path)
-    print(f"\nDocument successfully regenerated and saved to: {output_doc_path}")
+    try:
+        doc.save(output_doc_path)
+        print(f"\nDocument successfully regenerated and saved to: {output_doc_path}")
+    except PermissionError:
+        output_doc_path = "Bao_Cao_Du_Doan_Thoi_Gian_Web_API_SARIMA_Le_Quoc_Cuong_cap_nhat.docx"
+        doc.save(output_doc_path)
+        print(f"\nTep Word dang duoc mo boi Microsoft Word! Da luu ban moi vao: {output_doc_path}")
     return output_doc_path
 
 if __name__ == "__main__":
